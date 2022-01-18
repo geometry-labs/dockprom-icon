@@ -1,0 +1,10 @@
+  - job_name: 'icon'
+    labels:
+      hostname: icon-am-2.0
+    static_configs:
+       - targets:
+          - 54.184.241.211:9100
+          - 54.184.241.211:8080
+          - 54.184.241.211:9000
+
+# curl prometheus:9090
