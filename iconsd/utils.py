@@ -2,7 +2,7 @@ from logging import log
 import json
 
 import requests
-from requests.exceptions import ConnectTimeout, ConnectionError
+from requests.exceptions import ConnectTimeout, ConnectionError, ReadTimeout
 
 
 def post_rpc(url: str, payload: dict):
@@ -104,7 +104,7 @@ def get_peers(peer_set: set, added_peers: list = None):
 def check_endpoint_alive(endpoint: str):
     try:
         r = requests.get(endpoint, timeout=1)
-    except (ConnectTimeout, ConnectionError):
+    except (ConnectTimeout, ConnectionError, ReadTimeout):
         return False
     if r.status_code == 200:
         return True
