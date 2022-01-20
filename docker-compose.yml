@@ -21,6 +21,8 @@ services:
     restart: unless-stopped
     command: [
       "cron",
+      "--input", "/etc/prometheus/prometheus-base.yml",
+      "--output", "/etc/prometheus/prometheus.yml",
     ]
 
   prometheus:
