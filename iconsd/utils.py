@@ -41,7 +41,7 @@ def get_admin_chain(ip_address: str):
     url = f"http://{ip_address}:9000/admin/chain/0x1"
 
     try:
-        response = requests.get(url, timeout=2)
+        response = requests.get(url, timeout=1)
     except requests.exceptions.RequestException:
         return None
 

@@ -35,7 +35,7 @@ class TestUpdatePromConfig(unittest.TestCase):
         mock_check.return_value = True
         out = get_prometheus_config(OUTPUT_FILE, self.ips, self.labels)
 
-        assert len(out['scrape_configs']) > 100
+        assert len(out['scrape_configs']) > 6
 
     @patch('main.check_endpoint_alive')
     def test_main_update_config(self, mock_check):

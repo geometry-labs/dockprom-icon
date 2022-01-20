@@ -6,6 +6,24 @@ from time import sleep
 
 from utils import get_preps, get_peers, check_endpoint_alive, reload_config
 
+METRICS = [
+    {
+        'job_name': 'goloop',
+        'port': '9000',
+        'static_configs': []
+    },
+    {
+        'job_name': 'node_exporter_icon',
+        'port': '9100',
+        'static_configs': []
+    },
+    {
+        'job_name': 'cadvisor_icon',
+        'port': '8080',
+        'static_configs': []
+    },
+]
+
 
 def get_prometheus_config(config_path: str, ips: list, labels: dict):
     # Load the prom config
@@ -13,44 +31,49 @@ def get_prometheus_config(config_path: str, ips: list, labels: dict):
         config = yaml.safe_load(f)
 
     # All the targets will be updated except for persistent ones from this file
-    with open(os.path.join(os.path.dirname(__file__), 'persistent-scrape-configs.yml')) as f:
+    with open(os.path.join(os.path.dirname(__file__),
+                           'persistent-scrape-configs.yml')) as f:
         persistent_scrape = yaml.safe_load(f)
 
-    icon_scrape_targets = []
+    static_configs = []
+
     for i in ips:
         if i in labels:
             prep_label = labels[i].replace(" ", "")
+            is_prep = True
         else:
             prep_label = f"{i}"
+            is_prep = False
 
-        # Goloop
-        endpoint = i + ':9000'
-        # Need to append metrics for the check but then prom infers this after
-        if check_endpoint_alive('http://' + endpoint + '/metrics'):
-            icon_scrape_targets.append({
-                'job_name': f"{prep_label}IconMetrics",
-                'scrape_interval': '5s',
-                'static_configs': [{'targets': [endpoint]}],
-            })
-        # Node exporter
-        endpoint = i + ':9100'
-        if check_endpoint_alive('http://' + endpoint):
-            icon_scrape_targets.append({
-                'job_name': f"{prep_label}NodeMetrics",
-                'scrape_interval': '5s',
-                'static_configs': [{'targets': [endpoint]}],
-            })
-        # Cadvisor exporter
-        endpoint = i + ':9100'
-        if check_endpoint_alive('http://' + endpoint):
-            icon_scrape_targets.append({
-                'job_name': f"{prep_label}CadvisorMetrics",
-                'scrape_interval': '5s',
-                'static_configs': [{'targets': [endpoint]}],
-            })
+        for m in METRICS:
+            endpoint = i + f':{m["port"]}'
+            # Need to append metrics for the check but then prom infers this after
+            if check_endpoint_alive('http://' + endpoint + '/metrics'):
+                m['static_configs'].append({
+                        'targets': [endpoint],
+                        'labels': {
+                            'is_prep': is_prep,
+                            'prep_name': prep_label,
+                        }
+                    }
+                )
+
+    # Put the scrape configs into jobs
+    for m in METRICS:
+        """
+        - job_name: nodeexporter
+          scrape_interval: 5s
+          static_configs:
+        """
+        static_configs.append({
+            'job_name': m['job_name'],
+            'scrape_interval': '5s',
+            'static_configs': m['static_configs']
+        })
+
 
     config.pop('scrape_configs')
-    config['scrape_configs'] = persistent_scrape['scrape_configs'] + icon_scrape_targets
+    config['scrape_configs'] = persistent_scrape['scrape_configs'] + static_configs
 
     return config
 
@@ -68,7 +91,8 @@ def main():
 
     seed_nodes = get_preps(url)
 
-    labels = {i['p2pEndpoint'].split(':')[0]: i['name'] for i in seed_nodes['result']['preps']}
+    labels = {i['p2pEndpoint'].split(':')[0]: i['name'] for i in
+              seed_nodes['result']['preps']}
     ips = {i['p2pEndpoint'].split(':')[0] for i in seed_nodes['result']['preps']}
     logging.warning(f"Found {len(ips)} ips seeds.")
 
@@ -82,10 +106,11 @@ def main():
 
 
 def cron():
+    sleep_time = os.getenv('SLEEP_TIME', 3600)
     while True:
         main()
         logging.warning(f"Sleeping.")
-        sleep(600)
+        sleep(int(sleep_time))
 
 
 if __name__ == '__main__':
