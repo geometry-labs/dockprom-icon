@@ -22,12 +22,12 @@ class TestCli(unittest.TestCase):
         cli(['main', '-i', INPUT_FILE, '-o', INPUT_FILE + '.test'])
 
 
-class TestMain(unittest.TestCase):
-    @patch('main.get_peers')
-    @patch('main.reload_config')
-    def test_main(self, mock_get_peers, mock_reload_config):
-        mock_get_peers.return_value = PEERS_FIXTURE
-        main()
+# class TestMain(unittest.TestCase):
+#     @patch('main.get_peers')
+#     @patch('main.reload_config')
+#     def test_main(self, mock_get_peers, mock_reload_config):
+#         mock_get_peers.return_value = PEERS_FIXTURE
+#         main()
 
 
 class TestUpdatePromConfig(unittest.TestCase):
@@ -50,4 +50,5 @@ class TestUpdatePromConfig(unittest.TestCase):
     def test_main_update_config(self, mock_check):
         mock_check.return_value = True
         config = get_prometheus_config(INPUT_FILE, self.ips, self.labels)
-        replace_config(INPUT_FILE, config)
+        replace_config(INPUT_FILE + '.test', config)
+        os.remove(INPUT_FILE + '.test')
