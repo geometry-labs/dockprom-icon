@@ -15,6 +15,8 @@ docker-compose up -d
 ```
 The service discovery agent in the default setting will take about 3 min to build the peer list that will be used to scrape metrics.  Be patient while this list is generated, the `prometheus.yml` is updated, and endpoints are scraped. 
 
+Once the stack is up, navigate to `localhost` to view grafana, login with username `admin` / password `admin` which you should immediately change if you are planning on running it publicly. ICON specific dashboards will be automatically detected and should work once the network discovery tool has finished scraping the network. 
+
 ## Customization 
 
 ### Watch List
