@@ -49,16 +49,19 @@ def get_prometheus_config(input_config: str, ips: list, labels: dict):
 
         for m in METRICS:
             endpoint = i + f':{m["port"]}'
+
+            # TODO: https://github.com/sudoblockio/icon-dockprom/issues/1
+            # RM the check_endpoint due to ^^
             # Need to append metrics for the check but then prom infers this after
-            if check_endpoint_alive('http://' + endpoint + '/metrics'):
-                m['static_configs'].append({
-                        'targets': [endpoint],
-                        'labels': {
-                            'is_prep': is_prep,
-                            'prep_name': prep_label,
-                        }
+            # if check_endpoint_alive('http://' + endpoint + '/metrics'):
+            m['static_configs'].append({
+                    'targets': [endpoint],
+                    'labels': {
+                        'is_prep': is_prep,
+                        'prep_name': prep_label,
                     }
-                )
+                }
+            )
 
     # Put the scrape configs into jobs
     for m in METRICS:
